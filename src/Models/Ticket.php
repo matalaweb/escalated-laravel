@@ -1,0 +1,162 @@
+<?php
+
+namespace Escalated\Laravel\Models;
+
+use Escalated\Laravel\Enums\TicketPriority;
+use Escalated\Laravel\Enums\TicketStatus;
+use Escalated\Laravel\Escalated;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Ticket extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $guarded = ['id'];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => TicketStatus::class,
+            'priority' => TicketPriority::class,
+            'metadata' => 'array',
+            'first_response_at' => 'datetime',
+            'first_response_due_at' => 'datetime',
+            'resolution_due_at' => 'datetime',
+            'sla_first_response_breached' => 'boolean',
+            'sla_resolution_breached' => 'boolean',
+            'resolved_at' => 'datetime',
+            'closed_at' => 'datetime',
+        ];
+    }
+
+    public function getTable(): string
+    {
+        return Escalated::table('tickets');
+    }
+
+    public function requester(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(Escalated::userModel(), 'assigned_to');
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function slaPolicy(): BelongsTo
+    {
+        return $this->belongsTo(SlaPolicy::class, 'sla_policy_id');
+    }
+
+    public function replies(): HasMany
+    {
+        return $this->hasMany(Reply::class, 'ticket_id');
+    }
+
+    public function publicReplies(): HasMany
+    {
+        return $this->replies()->where('is_internal_note', false);
+    }
+
+    public function internalNotes(): HasMany
+    {
+        return $this->replies()->where('is_internal_note', true);
+    }
+
+    public function attachments(): MorphMany
+    {
+        return $this->morphMany(Attachment::class, 'attachable');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, Escalated::table('ticket_tag'), 'ticket_id', 'tag_id');
+    }
+
+    public function activities(): HasMany
+    {
+        return $this->hasMany(TicketActivity::class, 'ticket_id');
+    }
+
+    // Scopes
+
+    public function scopeOpen($query)
+    {
+        return $query->whereNotIn('status', [TicketStatus::Resolved->value, TicketStatus::Closed->value]);
+    }
+
+    public function scopeUnassigned($query)
+    {
+        return $query->whereNull('assigned_to');
+    }
+
+    public function scopeAssignedTo($query, int $agentId)
+    {
+        return $query->where('assigned_to', $agentId);
+    }
+
+    public function scopeWithStatus($query, TicketStatus $status)
+    {
+        return $query->where('status', $status->value);
+    }
+
+    public function scopeWithPriority($query, TicketPriority $priority)
+    {
+        return $query->where('priority', $priority->value);
+    }
+
+    public function scopeInDepartment($query, int $departmentId)
+    {
+        return $query->where('department_id', $departmentId);
+    }
+
+    public function scopeBreachedSla($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('sla_first_response_breached', true)
+              ->orWhere('sla_resolution_breached', true);
+        });
+    }
+
+    public function scopeSearch($query, string $term)
+    {
+        return $query->where(function ($q) use ($term) {
+            $q->where('subject', 'like', "%{$term}%")
+              ->orWhere('reference', 'like', "%{$term}%")
+              ->orWhere('description', 'like', "%{$term}%");
+        });
+    }
+
+    // Helpers
+
+    public static function generateReference(): string
+    {
+        $prefix = 'ESC';
+        $latest = static::withTrashed()->max('id') ?? 0;
+
+        return sprintf('%s-%05d', $prefix, $latest + 1);
+    }
+
+    public function isOpen(): bool
+    {
+        return $this->status->isOpen();
+    }
+
+    protected static function newFactory(): \Escalated\Laravel\Database\Factories\TicketFactory
+    {
+        return \Escalated\Laravel\Database\Factories\TicketFactory::new();
+    }
+}

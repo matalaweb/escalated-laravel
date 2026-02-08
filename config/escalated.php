@@ -1,0 +1,159 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hosting Mode
+    |--------------------------------------------------------------------------
+    |
+    | Determines how ticket data is stored and synced.
+    | - "self-hosted": All data in local DB. No external calls.
+    | - "synced": Local DB + events synced to cloud.escalated.dev
+    | - "cloud": All CRUD proxied to cloud.escalated.dev
+    |
+    */
+    'mode' => env('ESCALATED_MODE', 'self-hosted'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | User Model
+    |--------------------------------------------------------------------------
+    */
+    'user_model' => env('ESCALATED_USER_MODEL', 'App\\Models\\User'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hosted / Cloud Configuration
+    |--------------------------------------------------------------------------
+    */
+    'hosted' => [
+        'api_url' => env('ESCALATED_API_URL', 'https://cloud.escalated.dev/api/v1'),
+        'api_key' => env('ESCALATED_API_KEY'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Routes
+    |--------------------------------------------------------------------------
+    */
+    'routes' => [
+        'enabled' => true,
+        'prefix' => 'support',
+        'middleware' => ['web', 'auth'],
+        'admin_middleware' => ['web', 'auth'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Table Prefix
+    |--------------------------------------------------------------------------
+    */
+    'table_prefix' => 'escalated_',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tickets
+    |--------------------------------------------------------------------------
+    */
+    'tickets' => [
+        'allow_customer_close' => true,
+        'auto_close_resolved_after_days' => 7,
+        'max_attachments_per_reply' => 5,
+        'max_attachment_size_kb' => 10240,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Priorities
+    |--------------------------------------------------------------------------
+    */
+    'priorities' => ['low', 'medium', 'high', 'urgent', 'critical'],
+    'default_priority' => 'medium',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Statuses & Transitions
+    |--------------------------------------------------------------------------
+    */
+    'statuses' => [
+        'open', 'in_progress', 'waiting_on_customer', 'waiting_on_agent',
+        'escalated', 'resolved', 'closed', 'reopened',
+    ],
+
+    'transitions' => [
+        'open' => ['in_progress', 'waiting_on_customer', 'waiting_on_agent', 'escalated', 'resolved', 'closed'],
+        'in_progress' => ['waiting_on_customer', 'waiting_on_agent', 'escalated', 'resolved', 'closed'],
+        'waiting_on_customer' => ['open', 'in_progress', 'resolved', 'closed'],
+        'waiting_on_agent' => ['open', 'in_progress', 'escalated', 'resolved', 'closed'],
+        'escalated' => ['in_progress', 'resolved', 'closed'],
+        'resolved' => ['reopened', 'closed'],
+        'closed' => ['reopened'],
+        'reopened' => ['in_progress', 'waiting_on_customer', 'waiting_on_agent', 'escalated', 'resolved', 'closed'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | SLA
+    |--------------------------------------------------------------------------
+    */
+    'sla' => [
+        'enabled' => true,
+        'business_hours_only' => false,
+        'business_hours' => [
+            'start' => '09:00',
+            'end' => '17:00',
+            'timezone' => 'UTC',
+            'days' => [1, 2, 3, 4, 5], // Monday through Friday
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    */
+    'notifications' => [
+        'channels' => ['mail', 'database'],
+        'webhook_url' => env('ESCALATED_WEBHOOK_URL'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Storage (Attachments)
+    |--------------------------------------------------------------------------
+    */
+    'storage' => [
+        'disk' => 'public',
+        'path' => 'escalated/attachments',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authorization
+    |--------------------------------------------------------------------------
+    */
+    'authorization' => [
+        'admin_gate' => 'escalated-admin',
+        'agent_gate' => 'escalated-agent',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scheduling
+    |--------------------------------------------------------------------------
+    */
+    'scheduling' => [
+        'auto_register' => false,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Activity Log
+    |--------------------------------------------------------------------------
+    */
+    'activity_log' => [
+        'retention_days' => 90,
+    ],
+
+];
