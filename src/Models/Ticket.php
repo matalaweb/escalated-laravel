@@ -145,6 +145,31 @@ class Ticket extends Model
         });
     }
 
+    // Guest helpers
+
+    public function isGuest(): bool
+    {
+        return $this->requester_type === null && $this->guest_token !== null;
+    }
+
+    public function getRequesterNameAttribute(): string
+    {
+        if ($this->isGuest()) {
+            return $this->guest_name ?? 'Guest';
+        }
+
+        return $this->requester?->name ?? 'Unknown';
+    }
+
+    public function getRequesterEmailAttribute(): string
+    {
+        if ($this->isGuest()) {
+            return $this->guest_email ?? '';
+        }
+
+        return $this->requester?->email ?? '';
+    }
+
     // Helpers
 
     public static function generateReference(): string

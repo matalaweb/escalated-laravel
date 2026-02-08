@@ -9,8 +9,10 @@ use Escalated\Laravel\Console\Commands\InstallCommand;
 use Escalated\Laravel\Console\Commands\PurgeActivitiesCommand;
 use Escalated\Laravel\Events;
 use Escalated\Laravel\Listeners;
+use Escalated\Laravel\Models\EscalatedSettings;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
 
@@ -66,6 +68,7 @@ class EscalatedServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/agent.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/admin.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/customer.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/guest.php');
     }
 
     protected function registerCommands(): void
@@ -92,11 +95,22 @@ class EscalatedServiceProvider extends ServiceProvider
         Inertia::share('escalated', function () {
             $user = $this->app['auth']->user();
 
-            return [
+            $data = [
                 'prefix' => config('escalated.routes.prefix', 'support'),
                 'is_agent' => $user ? Gate::allows('escalated-agent', $user) : false,
                 'is_admin' => $user ? Gate::allows('escalated-admin', $user) : false,
             ];
+
+            // Share guest tickets setting for frontend (check table exists first)
+            try {
+                if (Schema::hasTable(Escalated::table('settings'))) {
+                    $data['guest_tickets_enabled'] = EscalatedSettings::guestTicketsEnabled();
+                }
+            } catch (\Throwable) {
+                // Settings table may not exist yet
+            }
+
+            return $data;
         });
     }
 

@@ -4,6 +4,7 @@ use Escalated\Laravel\Http\Controllers\AdminCannedResponseController;
 use Escalated\Laravel\Http\Controllers\AdminDepartmentController;
 use Escalated\Laravel\Http\Controllers\AdminEscalationRuleController;
 use Escalated\Laravel\Http\Controllers\AdminReportController;
+use Escalated\Laravel\Http\Controllers\AdminSettingsController;
 use Escalated\Laravel\Http\Controllers\AdminSlaPolicyController;
 use Escalated\Laravel\Http\Controllers\AdminTagController;
 use Escalated\Laravel\Http\Middleware\EnsureIsAdmin;
@@ -13,6 +14,9 @@ Route::middleware(array_merge(config('escalated.routes.admin_middleware', ['web'
     ->prefix(config('escalated.routes.prefix', 'support').'/admin')
     ->group(function () {
         Route::get('/reports', AdminReportController::class)->name('escalated.admin.reports');
+
+        Route::get('/settings', [AdminSettingsController::class, 'index'])->name('escalated.admin.settings');
+        Route::post('/settings', [AdminSettingsController::class, 'update'])->name('escalated.admin.settings.update');
 
         Route::resource('departments', AdminDepartmentController::class)
             ->names('escalated.admin.departments')
