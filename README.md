@@ -59,11 +59,11 @@ Visit `/support` — you're live.
 
 ## Frontend Integration
 
-Escalated ships a Vue component library (`@escalated-dev/escalated`) and default page templates. You have two options:
+Escalated ships a Vue component library and default pages via the [`@escalated-dev/escalated`](https://github.com/escalated-dev/escalated) npm package.
 
-### Option A: Use Default Pages (Quick Start)
+### 1. Page Resolver
 
-Resolve Escalated pages from the npm package in your `app.ts`:
+Add the Escalated page resolver to your `app.ts`:
 
 ```ts
 import { createInertiaApp } from '@inertiajs/vue3';
@@ -89,24 +89,51 @@ createInertiaApp({
 });
 ```
 
-### Option B: Custom Pages (Recommended)
+### 2. Theming (Optional)
 
-Create your own page files in `resources/js/Pages/Escalated/` that use your app's layout. Import individual components from `@escalated-dev/escalated`:
+Register the `EscalatedPlugin` to render Escalated pages inside your app's layout — no page duplication needed:
 
-```vue
-<script setup>
+```ts
+import { EscalatedPlugin } from '@escalated-dev/escalated';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { TicketList, TicketFilters, StatusBadge } from '@escalated-dev/escalated';
-</script>
 
-<template>
-    <AuthenticatedLayout>
-        <TicketList :tickets="tickets" />
-    </AuthenticatedLayout>
-</template>
+createInertiaApp({
+    setup({ el, App, props, plugin }) {
+        createApp({ render: () => h(App, props) })
+            .use(plugin)
+            .use(EscalatedPlugin, {
+                layout: AuthenticatedLayout,
+            })
+            .mount(el);
+    },
+});
 ```
 
-Since local pages in `Pages/Escalated/` match the component names the controllers render, Inertia's standard glob resolver picks them up automatically — no special resolver logic needed.
+Your layout component must accept a `#header` slot and a default slot. Escalated will render its sub-navigation in the header and page content in the default slot.
+
+Without the plugin, Escalated uses its own standalone layout with a simple nav bar.
+
+### CSS Custom Properties
+
+Pass a `theme` option to customize colors and radii:
+
+```ts
+app.use(EscalatedPlugin, {
+    layout: AuthenticatedLayout,
+    theme: {
+        primary: '#3b82f6',
+        radius: '0.75rem',
+    }
+})
+```
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `--esc-primary` | `#4f46e5` | Primary action color |
+| `--esc-primary-hover` | auto-darkened | Primary hover color |
+| `--esc-radius` | `0.5rem` | Border radius for inputs and buttons |
+| `--esc-radius-lg` | auto-scaled | Border radius for cards and panels |
+| `--esc-font-family` | inherit | Font family override |
 
 ### Available Components
 
