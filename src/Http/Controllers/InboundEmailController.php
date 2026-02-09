@@ -6,6 +6,7 @@ use Escalated\Laravel\Mail\Adapters\InboundAdapter;
 use Escalated\Laravel\Mail\Adapters\MailgunAdapter;
 use Escalated\Laravel\Mail\Adapters\PostmarkAdapter;
 use Escalated\Laravel\Mail\Adapters\SesAdapter;
+use Escalated\Laravel\Models\EscalatedSettings;
 use Escalated\Laravel\Services\InboundEmailService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class InboundEmailController extends Controller
     public function webhook(Request $request, string $adapter): JsonResponse
     {
         // Verify inbound email is enabled
-        if (! config('escalated.inbound_email.enabled', false)) {
+        if (! EscalatedSettings::getBool('inbound_email_enabled', (bool) config('escalated.inbound_email.enabled', false))) {
             return response()->json(['error' => 'Inbound email is disabled.'], 404);
         }
 

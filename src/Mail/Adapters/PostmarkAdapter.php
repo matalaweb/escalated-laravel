@@ -3,6 +3,7 @@
 namespace Escalated\Laravel\Mail\Adapters;
 
 use Escalated\Laravel\Mail\InboundMessage;
+use Escalated\Laravel\Models\EscalatedSettings;
 use Illuminate\Http\Request;
 
 class PostmarkAdapter implements InboundAdapter
@@ -59,7 +60,7 @@ class PostmarkAdapter implements InboundAdapter
      */
     public function verifyRequest(Request $request): bool
     {
-        $configuredToken = config('escalated.inbound_email.postmark.token');
+        $configuredToken = EscalatedSettings::get('postmark_inbound_token', config('escalated.inbound_email.postmark.token'));
 
         // If no token is configured, skip verification (not recommended for production)
         if (empty($configuredToken)) {

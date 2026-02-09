@@ -3,6 +3,7 @@
 namespace Escalated\Laravel\Console\Commands;
 
 use Escalated\Laravel\Mail\Adapters\ImapAdapter;
+use Escalated\Laravel\Models\EscalatedSettings;
 use Escalated\Laravel\Services\InboundEmailService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
@@ -17,17 +18,18 @@ class PollImapCommand extends Command
 
     public function handle(InboundEmailService $service): int
     {
-        if (! config('escalated.inbound_email.enabled', false)) {
-            $this->error('Inbound email is disabled. Set ESCALATED_INBOUND_EMAIL=true in .env.');
+        if (! EscalatedSettings::getBool('inbound_email_enabled', (bool) config('escalated.inbound_email.enabled', false))) {
+            $this->error('Inbound email is disabled. Enable it in admin settings or set ESCALATED_INBOUND_EMAIL=true in .env.');
 
             return self::FAILURE;
         }
 
-        if (config('escalated.inbound_email.adapter') !== 'imap') {
-            $this->warn('Inbound email adapter is not set to IMAP. Current adapter: '.config('escalated.inbound_email.adapter'));
+        $adapter = EscalatedSettings::get('inbound_email_adapter', config('escalated.inbound_email.adapter', 'mailgun'));
+        if ($adapter !== 'imap') {
+            $this->warn("Inbound email adapter is not set to IMAP. Current adapter: {$adapter}");
         }
 
-        $host = config('escalated.inbound_email.imap.host');
+        $host = EscalatedSettings::get('imap_host', config('escalated.inbound_email.imap.host'));
         if (empty($host)) {
             $this->error('IMAP host is not configured. Set ESCALATED_IMAP_HOST in .env.');
 

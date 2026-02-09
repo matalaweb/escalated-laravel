@@ -3,6 +3,7 @@
 namespace Escalated\Laravel\Mail\Adapters;
 
 use Escalated\Laravel\Mail\InboundMessage;
+use Escalated\Laravel\Models\EscalatedSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -36,12 +37,12 @@ class ImapAdapter implements InboundAdapter
     {
         $config = config('escalated.inbound_email.imap');
 
-        $host = $config['host'] ?? '';
-        $port = $config['port'] ?? 993;
-        $encryption = $config['encryption'] ?? 'ssl';
-        $username = $config['username'] ?? '';
-        $password = $config['password'] ?? '';
-        $mailbox = $config['mailbox'] ?? 'INBOX';
+        $host = EscalatedSettings::get('imap_host', $config['host'] ?? '');
+        $port = EscalatedSettings::getInt('imap_port', (int) ($config['port'] ?? 993));
+        $encryption = EscalatedSettings::get('imap_encryption', $config['encryption'] ?? 'ssl');
+        $username = EscalatedSettings::get('imap_username', $config['username'] ?? '');
+        $password = EscalatedSettings::get('imap_password', $config['password'] ?? '');
+        $mailbox = EscalatedSettings::get('imap_mailbox', $config['mailbox'] ?? 'INBOX');
 
         if (empty($host) || empty($username) || empty($password)) {
             throw new \RuntimeException('IMAP configuration is incomplete. Check host, username, and password.');

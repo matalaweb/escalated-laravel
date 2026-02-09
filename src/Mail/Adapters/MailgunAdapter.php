@@ -3,6 +3,7 @@
 namespace Escalated\Laravel\Mail\Adapters;
 
 use Escalated\Laravel\Mail\InboundMessage;
+use Escalated\Laravel\Models\EscalatedSettings;
 use Illuminate\Http\Request;
 
 class MailgunAdapter implements InboundAdapter
@@ -52,7 +53,7 @@ class MailgunAdapter implements InboundAdapter
      */
     public function verifyRequest(Request $request): bool
     {
-        $signingKey = config('escalated.inbound_email.mailgun.signing_key');
+        $signingKey = EscalatedSettings::get('mailgun_signing_key', config('escalated.inbound_email.mailgun.signing_key'));
 
         if (empty($signingKey)) {
             return false;

@@ -3,6 +3,7 @@
 namespace Escalated\Laravel\Mail\Adapters;
 
 use Escalated\Laravel\Mail\InboundMessage;
+use Escalated\Laravel\Models\EscalatedSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -94,7 +95,7 @@ class SesAdapter implements InboundAdapter
         $payload = $request->json()->all();
 
         // Verify the TopicArn matches configuration
-        $configuredArn = config('escalated.inbound_email.ses.topic_arn');
+        $configuredArn = EscalatedSettings::get('ses_topic_arn', config('escalated.inbound_email.ses.topic_arn'));
         if (! empty($configuredArn)) {
             $topicArn = $payload['TopicArn'] ?? '';
             if ($topicArn !== $configuredArn) {
