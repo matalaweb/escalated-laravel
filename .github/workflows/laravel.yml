@@ -1,10 +1,10 @@
-name: Laravel
+name: escalated-laravel tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   tests:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout package
         uses: actions/checkout@v4
         with:
-          path: package
+          path: escalated-laravel
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -22,29 +22,28 @@ jobs:
           php-version: '8.2'
           coverage: none
 
-      - name: Create Laravel app
-        run: composer create-project laravel/laravel testbench --no-interaction
+      - name: Create Laravel host
+        run: composer create-project laravel/laravel laravel --no-interaction
 
-      - name: Require package (path repository)
-        working-directory: testbench
+      - name: Install escalated-laravel into host
+        working-directory: laravel
         run: |
-          composer config repositories.escalated path ../package
+          composer config repositories.escalated path ../escalated-laravel
           composer require escalated-dev/escalated-laravel:@dev --no-interaction
 
       - name: Prepare environment
-        working-directory: testbench
+        working-directory: laravel
         run: |
           cp .env.example .env
           php artisan key:generate
           touch database/database.sqlite
 
-      - name: Run migrations (if needed)
-        working-directory: testbench
-        run: php artisan migrate --no-interaction --force
-
-      - name: Run tests
-        working-directory: testbench
+      - name: Run escalated package tests
+        working-directory: laravel
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
-        run: php artisan test
+        run: |
+          vendor/bin/phpunit \
+            ../escalated-laravel/tests
+
