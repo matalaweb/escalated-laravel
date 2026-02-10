@@ -21,5 +21,15 @@ class SendReplyNotifications
         if ($ticket->assigned_to && $ticket->assignee && $reply->author_id !== $ticket->assigned_to) {
             $ticket->assignee->notify(new TicketReplyNotification($reply));
         }
+
+        // Notify followers (except the reply author)
+        $ticket->loadMissing('followers');
+        foreach ($ticket->followers as $follower) {
+            if ($follower->getKey() !== $reply->author_id
+                && $follower->getKey() !== $ticket->requester_id
+                && $follower->getKey() !== $ticket->assigned_to) {
+                $follower->notify(new TicketReplyNotification($reply));
+            }
+        }
     }
 }

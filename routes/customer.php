@@ -1,6 +1,7 @@
 <?php
 
 use Escalated\Laravel\Http\Controllers\CustomerTicketController;
+use Escalated\Laravel\Http\Controllers\SatisfactionRatingController;
 use Escalated\Laravel\Http\Middleware\ResolveTicketByReference;
 use Illuminate\Support\Facades\Route;
 
@@ -18,5 +19,6 @@ Route::middleware(config('escalated.routes.middleware', ['web', 'auth']))
                 Route::post('/{ticket}/reply', [CustomerTicketController::class, 'reply'])->name('escalated.customer.tickets.reply');
                 Route::post('/{ticket}/close', [CustomerTicketController::class, 'close'])->name('escalated.customer.tickets.close');
                 Route::post('/{ticket}/reopen', [CustomerTicketController::class, 'reopen'])->name('escalated.customer.tickets.reopen');
+                Route::post('/{ticket}/rate', [SatisfactionRatingController::class, 'store'])->name('escalated.customer.tickets.rate');
             });
     });

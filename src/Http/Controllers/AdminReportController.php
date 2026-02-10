@@ -2,6 +2,7 @@
 
 namespace Escalated\Laravel\Http\Controllers;
 
+use Escalated\Laravel\Models\SatisfactionRating;
 use Escalated\Laravel\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -30,6 +31,7 @@ class AdminReportController extends Controller
                 ->select('priority', DB::raw('count(*) as count'))
                 ->groupBy('priority')
                 ->pluck('count', 'priority'),
+            'csat' => $this->getCsatMetrics($since),
         ]);
     }
 
@@ -47,5 +49,19 @@ class AdminReportController extends Controller
             ->where('created_at', '>=', $since)
             ->selectRaw($raw)
             ->value('avg_hours') ?? 0);
+    }
+
+    protected function getCsatMetrics($since): array
+    {
+        $ratings = SatisfactionRating::where('created_at', '>=', $since);
+
+        return [
+            'average' => round((float) ($ratings->avg('rating') ?? 0), 1),
+            'total' => $ratings->count(),
+            'breakdown' => SatisfactionRating::where('created_at', '>=', $since)
+                ->select('rating', DB::raw('count(*) as count'))
+                ->groupBy('rating')
+                ->pluck('count', 'rating'),
+        ];
     }
 }

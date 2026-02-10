@@ -1,6 +1,7 @@
 <?php
 
 use Escalated\Laravel\Http\Controllers\GuestTicketController;
+use Escalated\Laravel\Http\Controllers\SatisfactionRatingController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web'])
@@ -14,4 +15,7 @@ Route::middleware(['web'])
         Route::post('/{token}/reply', [GuestTicketController::class, 'reply'])
             ->where('token', '[A-Za-z0-9]{64}')
             ->name('escalated.guest.tickets.reply');
+        Route::post('/{token}/rate', [SatisfactionRatingController::class, 'storeGuest'])
+            ->where('token', '[A-Za-z0-9]{64}')
+            ->name('escalated.guest.tickets.rate');
     });

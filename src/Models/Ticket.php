@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -96,6 +97,41 @@ class Ticket extends Model
         return $this->hasMany(TicketActivity::class, 'ticket_id');
     }
 
+    public function latestReply(): HasOne
+    {
+        return $this->hasOne(Reply::class, 'ticket_id')->where('is_internal_note', false)->latestOfMany();
+    }
+
+    public function followers(): BelongsToMany
+    {
+        return $this->belongsToMany(Escalated::userModel(), Escalated::table('ticket_followers'), 'ticket_id', 'user_id')->withTimestamps();
+    }
+
+    public function satisfactionRating(): HasOne
+    {
+        return $this->hasOne(SatisfactionRating::class, 'ticket_id');
+    }
+
+    public function pinnedNotes(): HasMany
+    {
+        return $this->hasMany(Reply::class, 'ticket_id')->where('is_internal_note', true)->where('is_pinned', true);
+    }
+
+    public function isFollowedBy(int $userId): bool
+    {
+        return $this->followers()->where('user_id', $userId)->exists();
+    }
+
+    public function follow(int $userId): void
+    {
+        $this->followers()->syncWithoutDetaching([$userId]);
+    }
+
+    public function unfollow(int $userId): void
+    {
+        $this->followers()->detach($userId);
+    }
+
     // Scopes
 
     public function scopeOpen($query)
@@ -168,6 +204,16 @@ class Ticket extends Model
         }
 
         return $this->requester?->email ?? '';
+    }
+
+    public function getLastReplyAtAttribute(): ?string
+    {
+        return $this->latestReply?->created_at?->toIso8601String();
+    }
+
+    public function getLastReplyAuthorAttribute(): ?string
+    {
+        return $this->latestReply?->author?->name;
     }
 
     // Helpers

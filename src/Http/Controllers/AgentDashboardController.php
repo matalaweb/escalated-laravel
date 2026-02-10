@@ -22,10 +22,23 @@ class AgentDashboardController extends Controller
                 'sla_breached' => Ticket::open()->breachedSla()->count(),
                 'resolved_today' => Ticket::where('resolved_at', '>=', now()->startOfDay())->count(),
             ],
-            'recentTickets' => Ticket::with(['requester', 'assignee', 'department'])
+            'recentTickets' => Ticket::with(['requester', 'assignee', 'department', 'latestReply.author'])
                 ->latest()
                 ->take(10)
                 ->get(),
+            'needsAttention' => [
+                'sla_breaching' => Ticket::open()->breachedSla()->with(['requester', 'assignee'])->take(5)->get(),
+                'unassigned_urgent' => Ticket::unassigned()->open()
+                    ->whereIn('priority', ['urgent', 'critical'])
+                    ->with(['requester'])
+                    ->take(5)
+                    ->get(),
+            ],
+            'myPerformance' => [
+                'resolved_this_week' => Ticket::assignedTo($userId)
+                    ->where('resolved_at', '>=', now()->startOfWeek())
+                    ->count(),
+            ],
         ]);
     }
 }

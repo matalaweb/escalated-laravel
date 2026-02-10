@@ -3,11 +3,14 @@
 use Escalated\Laravel\Http\Controllers\AdminCannedResponseController;
 use Escalated\Laravel\Http\Controllers\AdminDepartmentController;
 use Escalated\Laravel\Http\Controllers\AdminEscalationRuleController;
+use Escalated\Laravel\Http\Controllers\AdminMacroController;
 use Escalated\Laravel\Http\Controllers\AdminReportController;
 use Escalated\Laravel\Http\Controllers\AdminSettingsController;
 use Escalated\Laravel\Http\Controllers\AdminSlaPolicyController;
 use Escalated\Laravel\Http\Controllers\AdminTagController;
 use Escalated\Laravel\Http\Controllers\AdminTicketController;
+use Escalated\Laravel\Http\Controllers\BulkActionController;
+use Escalated\Laravel\Http\Controllers\SatisfactionRatingController;
 use Escalated\Laravel\Http\Middleware\EnsureIsAdmin;
 use Escalated\Laravel\Http\Middleware\ResolveTicketByReference;
 use Illuminate\Support\Facades\Route;
@@ -18,6 +21,7 @@ Route::middleware(array_merge(config('escalated.routes.admin_middleware', ['web'
         Route::get('/reports', AdminReportController::class)->name('escalated.admin.reports');
 
         Route::get('/tickets', [AdminTicketController::class, 'index'])->name('escalated.admin.tickets.index');
+        Route::post('/tickets/bulk', BulkActionController::class)->name('escalated.admin.tickets.bulk');
 
         Route::middleware(ResolveTicketByReference::class)->group(function () {
             Route::get('/tickets/{ticket}', [AdminTicketController::class, 'show'])->name('escalated.admin.tickets.show');
@@ -28,6 +32,10 @@ Route::middleware(array_merge(config('escalated.routes.admin_middleware', ['web'
             Route::post('/tickets/{ticket}/priority', [AdminTicketController::class, 'priority'])->name('escalated.admin.tickets.priority');
             Route::post('/tickets/{ticket}/tags', [AdminTicketController::class, 'tags'])->name('escalated.admin.tickets.tags');
             Route::post('/tickets/{ticket}/department', [AdminTicketController::class, 'department'])->name('escalated.admin.tickets.department');
+            Route::post('/tickets/{ticket}/macro', [AdminTicketController::class, 'applyMacro'])->name('escalated.admin.tickets.macro');
+            Route::post('/tickets/{ticket}/follow', [AdminTicketController::class, 'follow'])->name('escalated.admin.tickets.follow');
+            Route::post('/tickets/{ticket}/presence', [AdminTicketController::class, 'presence'])->name('escalated.admin.tickets.presence');
+            Route::post('/tickets/{ticket}/replies/{reply}/pin', [AdminTicketController::class, 'pin'])->name('escalated.admin.tickets.pin');
         });
 
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('escalated.admin.settings');
@@ -54,4 +62,9 @@ Route::middleware(array_merge(config('escalated.routes.admin_middleware', ['web'
         Route::post('/canned-responses', [AdminCannedResponseController::class, 'store'])->name('escalated.admin.canned-responses.store');
         Route::put('/canned-responses/{cannedResponse}', [AdminCannedResponseController::class, 'update'])->name('escalated.admin.canned-responses.update');
         Route::delete('/canned-responses/{cannedResponse}', [AdminCannedResponseController::class, 'destroy'])->name('escalated.admin.canned-responses.destroy');
+
+        Route::get('/macros', [AdminMacroController::class, 'index'])->name('escalated.admin.macros.index');
+        Route::post('/macros', [AdminMacroController::class, 'store'])->name('escalated.admin.macros.store');
+        Route::put('/macros/{macro}', [AdminMacroController::class, 'update'])->name('escalated.admin.macros.update');
+        Route::delete('/macros/{macro}', [AdminMacroController::class, 'destroy'])->name('escalated.admin.macros.destroy');
     });

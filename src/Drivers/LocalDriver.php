@@ -167,7 +167,7 @@ class LocalDriver implements TicketDriver
 
     public function listTickets(array $filters = [], ?Ticketable $for = null): LengthAwarePaginator
     {
-        $query = Ticket::query()->with(['requester', 'assignee', 'department', 'tags']);
+        $query = Ticket::query()->with(['requester', 'assignee', 'department', 'tags', 'latestReply.author']);
 
         if ($for) {
             $query->where('requester_type', $for->getMorphClass())
@@ -204,6 +204,10 @@ class LocalDriver implements TicketDriver
 
         if (! empty($filters['tag_ids'])) {
             $query->whereHas('tags', fn ($q) => $q->whereIn('id', $filters['tag_ids']));
+        }
+
+        if (isset($filters['following']) && $filters['following'] && $for) {
+            $query->whereHas('followers', fn ($q) => $q->where('user_id', $for->getKey()));
         }
 
         $sortBy = $filters['sort_by'] ?? 'created_at';

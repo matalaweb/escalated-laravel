@@ -12,13 +12,17 @@ use Escalated\Laravel\Http\Requests\ReplyToTicketRequest;
 use Escalated\Laravel\Http\Requests\UpdateTagsRequest;
 use Escalated\Laravel\Models\CannedResponse;
 use Escalated\Laravel\Models\Department;
+use Escalated\Laravel\Models\Macro;
+use Escalated\Laravel\Models\Reply;
 use Escalated\Laravel\Models\Tag;
 use Escalated\Laravel\Models\Ticket;
 use Escalated\Laravel\Services\AssignmentService;
+use Escalated\Laravel\Services\MacroService;
 use Escalated\Laravel\Services\TicketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,7 +36,8 @@ class AdminTicketController extends Controller
     public function index(Request $request): Response
     {
         $tickets = $this->ticketService->list(
-            $request->only(['status', 'priority', 'assigned_to', 'unassigned', 'department_id', 'search', 'sla_breached', 'tag_ids', 'sort_by', 'sort_dir', 'per_page'])
+            $request->only(['status', 'priority', 'assigned_to', 'unassigned', 'department_id', 'search', 'sla_breached', 'tag_ids', 'sort_by', 'sort_dir', 'per_page', 'following']),
+            $request->has('following') ? $request->user() : null,
         );
 
         return Inertia::render('Escalated/Admin/Tickets/Index', [
@@ -50,6 +55,7 @@ class AdminTicketController extends Controller
             'replies' => fn ($q) => $q->with('author', 'attachments')->latest(),
             'attachments', 'tags', 'department', 'requester', 'assignee',
             'slaPolicy', 'activities' => fn ($q) => $q->with('causer')->latest()->take(20),
+            'satisfactionRating', 'pinnedNotes.author',
         ]);
 
         return Inertia::render('Escalated/Admin/Tickets/Show', [
@@ -58,6 +64,9 @@ class AdminTicketController extends Controller
             'tags' => Tag::all(['id', 'name', 'color']),
             'cannedResponses' => CannedResponse::forAgent($request->user()->getKey())->get(),
             'agents' => $this->getAgents(),
+            'macros' => Macro::forAgent($request->user()->getKey())->orderBy('order')->get(),
+            'is_following' => $ticket->isFollowedBy($request->user()->getKey()),
+            'followers_count' => $ticket->followers()->count(),
         ]);
     }
 
@@ -121,6 +130,67 @@ class AdminTicketController extends Controller
         $this->ticketService->changeDepartment($ticket, $request->integer('department_id'), $request->user());
 
         return back()->with('success', 'Department updated.');
+    }
+
+    public function applyMacro(Ticket $ticket, Request $request, MacroService $macroService): RedirectResponse
+    {
+        $request->validate(['macro_id' => 'required|integer']);
+
+        $macro = Macro::forAgent($request->user()->getKey())->findOrFail($request->integer('macro_id'));
+        $macroService->apply($macro, $ticket, $request->user());
+
+        return back()->with('success', "Macro \"{$macro->name}\" applied.");
+    }
+
+    public function follow(Ticket $ticket, Request $request): RedirectResponse
+    {
+        $userId = $request->user()->getKey();
+
+        if ($ticket->isFollowedBy($userId)) {
+            $ticket->unfollow($userId);
+
+            return back()->with('success', 'Unfollowed ticket.');
+        }
+
+        $ticket->follow($userId);
+
+        return back()->with('success', 'Following ticket.');
+    }
+
+    public function presence(Ticket $ticket, Request $request): \Illuminate\Http\JsonResponse
+    {
+        $userId = $request->user()->getKey();
+        $userName = $request->user()->name;
+        $cacheKey = "escalated.presence.{$ticket->id}.{$userId}";
+
+        Cache::put($cacheKey, ['id' => $userId, 'name' => $userName], 60);
+
+        $viewers = [];
+
+        foreach (Cache::get("escalated.presence_list.{$ticket->id}", []) as $uid) {
+            if ($uid !== $userId && Cache::has("escalated.presence.{$ticket->id}.{$uid}")) {
+                $viewers[] = Cache::get("escalated.presence.{$ticket->id}.{$uid}");
+            }
+        }
+
+        $activeIds = Cache::get("escalated.presence_list.{$ticket->id}", []);
+        if (! in_array($userId, $activeIds)) {
+            $activeIds[] = $userId;
+        }
+        Cache::put("escalated.presence_list.{$ticket->id}", $activeIds, 120);
+
+        return response()->json(['viewers' => $viewers]);
+    }
+
+    public function pin(Ticket $ticket, Reply $reply, Request $request): RedirectResponse
+    {
+        if (! $reply->is_internal_note) {
+            return back()->with('error', 'Only internal notes can be pinned.');
+        }
+
+        $reply->update(['is_pinned' => ! $reply->is_pinned]);
+
+        return back()->with('success', $reply->is_pinned ? 'Note pinned.' : 'Note unpinned.');
     }
 
     protected function getAgents(): array

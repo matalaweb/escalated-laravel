@@ -16,5 +16,16 @@ class SendStatusChangeNotification
                 $ticket, $event->oldStatus, $event->newStatus
             ));
         }
+
+        // Notify followers (except the causer and requester)
+        $ticket->loadMissing('followers');
+        foreach ($ticket->followers as $follower) {
+            if ($follower->getKey() !== $event->causer?->getKey()
+                && $follower->getKey() !== $ticket->requester_id) {
+                $follower->notify(new TicketStatusChangedNotification(
+                    $ticket, $event->oldStatus, $event->newStatus
+                ));
+            }
+        }
     }
 }

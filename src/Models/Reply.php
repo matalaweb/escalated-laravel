@@ -20,8 +20,14 @@ class Reply extends Model
     {
         return [
             'is_internal_note' => 'boolean',
+            'is_pinned' => 'boolean',
             'metadata' => 'array',
         ];
+    }
+
+    public function scopePinned($query)
+    {
+        return $query->where('is_pinned', true);
     }
 
     public function getTable(): string
