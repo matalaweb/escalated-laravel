@@ -5,7 +5,7 @@ use Escalated\Laravel\Services\PluginService;
 use Illuminate\Support\Facades\File;
 
 beforeEach(function () {
-    $this->pluginsPath = resource_path('escalated/plugins');
+    $this->pluginsPath = app_path('Plugins/Escalated');
 
     // Clean up any leftover plugin dirs
     if (File::exists($this->pluginsPath)) {

@@ -8,7 +8,7 @@ beforeEach(function () {
     Gate::define('escalated-agent', fn ($user) => $user->is_agent || $user->is_admin);
     Gate::define('escalated-admin', fn ($user) => $user->is_admin);
 
-    $this->pluginsPath = config('escalated.plugins.path', resource_path('escalated/plugins'));
+    $this->pluginsPath = config('escalated.plugins.path', app_path('Plugins/Escalated'));
 
     if (! File::exists($this->pluginsPath)) {
         File::makeDirectory($this->pluginsPath, 0755, true);

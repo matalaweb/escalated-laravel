@@ -5,7 +5,7 @@ All notable changes to Escalated will be documented in this file.
 ## [0.5.0] - 2026-02-11
 
 ### Added
-- Plugin storage moved to `resources/escalated/plugins`
+- Plugin storage moved to `app/Plugins/Escalated`
 - Composer plugin auto-discovery via `vendor/*/*/plugin.json`
 - Dual-source plugin loading (local + Composer) with `source` field
 - Admin Plugins page with upload, activate/deactivate, and delete controls

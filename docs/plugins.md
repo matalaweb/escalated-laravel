@@ -72,7 +72,7 @@ escalated_add_filter('escalated_ticket_data', function ($data) {
 2. Go to **Admin > Plugins** and upload the ZIP file.
 3. Click **Inactive** to activate the plugin.
 
-Uploaded plugins are stored in `resources/escalated/plugins/`.
+Uploaded plugins are stored in `app/Plugins/Escalated/`.
 
 ### Composer Package
 
@@ -338,5 +338,5 @@ Since Composer handles autoloading, your `Plugin.php` can use classes from `src/
 - **Use activation hooks** to run migrations or seed data on first activation.
 - **Use uninstall hooks** to clean up database tables when your plugin is removed.
 - **Namespace your hooks** to avoid collisions: `escalated_myplugin_custom_action`.
-- **Test locally** by placing your plugin folder in `resources/escalated/plugins/` and activating it from the admin panel.
+- **Test locally** by placing your plugin folder in `app/Plugins/Escalated/` and activating it from the admin panel.
 - **Composer plugins** benefit from PSR-4 autoloading, testing infrastructure, and version management via Packagist.

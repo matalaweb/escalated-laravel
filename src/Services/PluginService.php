@@ -15,7 +15,7 @@ class PluginService
 
     public function __construct()
     {
-        $this->pluginsPath = config('escalated.plugins.path', resource_path('escalated/plugins'));
+        $this->pluginsPath = config('escalated.plugins.path', app_path('Plugins/Escalated'));
 
         // Ensure plugins directory exists
         if (! File::exists($this->pluginsPath)) {
