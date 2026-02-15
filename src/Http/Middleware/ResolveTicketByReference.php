@@ -15,9 +15,7 @@ class ResolveTicketByReference
             $value = $request->route('ticket');
 
             if (! $value instanceof Ticket) {
-                $ticket = Ticket::where('reference', $value)
-                    ->orWhere('id', $value)
-                    ->firstOrFail();
+                $ticket = Ticket::where('reference', $value)->firstOrFail();
 
                 $request->route()->setParameter('ticket', $ticket);
             }
