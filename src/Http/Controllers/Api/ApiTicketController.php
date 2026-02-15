@@ -26,8 +26,15 @@ class ApiTicketController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $request->validate([
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
+
+        $filters = $request->only(['status', 'priority', 'assigned_to', 'unassigned', 'department_id', 'search', 'sla_breached', 'tag_ids', 'sort_by', 'sort_dir', 'per_page', 'following']);
+        $filters['per_page'] = min((int) ($filters['per_page'] ?? 15), 100);
+
         $tickets = $this->ticketService->list(
-            $request->only(['status', 'priority', 'assigned_to', 'unassigned', 'department_id', 'search', 'sla_breached', 'tag_ids', 'sort_by', 'sort_dir', 'per_page', 'following']),
+            $filters,
             $request->has('following') ? $request->user() : null,
         );
 

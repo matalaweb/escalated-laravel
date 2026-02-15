@@ -6,6 +6,7 @@ use Closure;
 use Escalated\Laravel\Models\ApiToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class AuthenticateApiToken
@@ -21,10 +22,22 @@ class AuthenticateApiToken
         $apiToken = ApiToken::findByPlainText($token);
 
         if (! $apiToken) {
+            Log::warning('API authentication failed: invalid token', [
+                'ip' => $request->ip(),
+                'path' => $request->path(),
+            ]);
+
             return response()->json(['message' => 'Invalid token.'], 401);
         }
 
         if ($apiToken->isExpired()) {
+            Log::warning('API authentication failed: expired token', [
+                'token_id' => $apiToken->id,
+                'token_name' => $apiToken->name,
+                'ip' => $request->ip(),
+                'expired_at' => $apiToken->expires_at->toIso8601String(),
+            ]);
+
             return response()->json(['message' => 'Token has expired.'], 401);
         }
 
@@ -35,12 +48,23 @@ class AuthenticateApiToken
         $user = $apiToken->tokenable;
 
         if (! $user) {
+            Log::warning('API authentication failed: token owner not found', [
+                'token_id' => $apiToken->id,
+                'ip' => $request->ip(),
+            ]);
+
             return response()->json(['message' => 'Token owner not found.'], 401);
         }
 
         // Verify the user still has the required gate permission
         $agentGate = config('escalated.authorization.agent_gate', 'escalated-agent');
         if (! Gate::forUser($user)->allows($agentGate)) {
+            Log::warning('API authentication failed: user no longer has agent access', [
+                'token_id' => $apiToken->id,
+                'user_id' => $user->getKey(),
+                'ip' => $request->ip(),
+            ]);
+
             return response()->json(['message' => 'User no longer has agent access.'], 403);
         }
 
