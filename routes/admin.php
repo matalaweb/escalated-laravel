@@ -1,6 +1,7 @@
 <?php
 
 use Escalated\Laravel\Http\Controllers\Admin\AuditLogController;
+use Escalated\Laravel\Http\Controllers\Admin\CapacityController;
 use Escalated\Laravel\Http\Controllers\Admin\BusinessHoursController;
 use Escalated\Laravel\Http\Controllers\Admin\CannedResponseController;
 use Escalated\Laravel\Http\Controllers\Admin\CustomFieldController;
@@ -122,4 +123,8 @@ Route::middleware(array_merge(config('escalated.routes.admin_middleware', ['web'
         Route::resource('skills', SkillController::class)
             ->names('escalated.admin.skills')
             ->except(['show']);
+
+        // Agent Capacity
+        Route::get('/capacity', [CapacityController::class, 'index'])->name('escalated.admin.capacity.index');
+        Route::put('/capacity/{capacity}', [CapacityController::class, 'update'])->name('escalated.admin.capacity.update');
     });
