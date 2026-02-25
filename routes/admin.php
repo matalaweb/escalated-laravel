@@ -1,12 +1,17 @@
 <?php
 
+use Escalated\Laravel\Http\Controllers\Admin\AuditLogController;
+use Escalated\Laravel\Http\Controllers\Admin\BusinessHoursController;
 use Escalated\Laravel\Http\Controllers\Admin\CannedResponseController;
+use Escalated\Laravel\Http\Controllers\Admin\CustomFieldController;
 use Escalated\Laravel\Http\Controllers\Admin\DepartmentController;
 use Escalated\Laravel\Http\Controllers\Admin\EscalationRuleController;
 use Escalated\Laravel\Http\Controllers\Admin\MacroController;
 use Escalated\Laravel\Http\Controllers\Admin\ReportController;
+use Escalated\Laravel\Http\Controllers\Admin\RoleController;
 use Escalated\Laravel\Http\Controllers\Admin\SettingsController;
 use Escalated\Laravel\Http\Controllers\Admin\SlaPolicyController;
+use Escalated\Laravel\Http\Controllers\Admin\StatusController;
 use Escalated\Laravel\Http\Controllers\Admin\TagController;
 use Escalated\Laravel\Http\Controllers\Admin\TicketController;
 use Escalated\Laravel\Http\Controllers\BulkActionController;
@@ -67,4 +72,30 @@ Route::middleware(array_merge(config('escalated.routes.admin_middleware', ['web'
         Route::post('/macros', [MacroController::class, 'store'])->name('escalated.admin.macros.store');
         Route::put('/macros/{macro}', [MacroController::class, 'update'])->name('escalated.admin.macros.update');
         Route::delete('/macros/{macro}', [MacroController::class, 'destroy'])->name('escalated.admin.macros.destroy');
+
+        // Custom Fields
+        Route::resource('custom-fields', CustomFieldController::class)
+            ->names('escalated.admin.custom-fields')
+            ->except(['show']);
+        Route::post('/custom-fields/reorder', [CustomFieldController::class, 'reorder'])
+            ->name('escalated.admin.custom-fields.reorder');
+
+        // Statuses
+        Route::resource('statuses', StatusController::class)
+            ->names('escalated.admin.statuses')
+            ->except(['show']);
+
+        // Business Hours
+        Route::resource('business-hours', BusinessHoursController::class)
+            ->names('escalated.admin.business-hours')
+            ->except(['show']);
+
+        // Roles
+        Route::resource('roles', RoleController::class)
+            ->names('escalated.admin.roles')
+            ->except(['show']);
+
+        // Audit Log
+        Route::get('/audit-log', [AuditLogController::class, 'index'])
+            ->name('escalated.admin.audit-log');
     });
