@@ -14,6 +14,7 @@ use Escalated\Laravel\Http\Controllers\Admin\SlaPolicyController;
 use Escalated\Laravel\Http\Controllers\Admin\StatusController;
 use Escalated\Laravel\Http\Controllers\Admin\TagController;
 use Escalated\Laravel\Http\Controllers\Admin\SideConversationController;
+use Escalated\Laravel\Http\Controllers\PresenceController;
 use Escalated\Laravel\Http\Controllers\Admin\TicketController;
 use Escalated\Laravel\Http\Controllers\Admin\TicketLinkController;
 use Escalated\Laravel\Http\Controllers\Admin\TicketMergeController;
@@ -44,6 +45,7 @@ Route::middleware(array_merge(config('escalated.routes.admin_middleware', ['web'
             Route::post('/tickets/{ticket}/macro', [TicketController::class, 'applyMacro'])->name('escalated.admin.tickets.macro');
             Route::post('/tickets/{ticket}/follow', [TicketController::class, 'follow'])->name('escalated.admin.tickets.follow');
             Route::post('/tickets/{ticket}/presence', [TicketController::class, 'presence'])->name('escalated.admin.tickets.presence');
+            Route::post('/tickets/{ticket}/typing', [PresenceController::class, 'typing'])->name('escalated.admin.tickets.typing');
             Route::post('/tickets/{ticket}/replies/{reply}/pin', [TicketController::class, 'pin'])->name('escalated.admin.tickets.pin');
             Route::post('/tickets/{ticket}/merge', [TicketMergeController::class, 'merge'])->name('escalated.admin.tickets.merge');
 
