@@ -501,6 +501,58 @@ class MyAdapter implements InboundAdapter
 
 All routes use the configurable prefix (default: `support`). Inbound webhook routes use the `api` middleware (no auth, no CSRF).
 
+## Plugin SDK
+
+Escalated supports framework-agnostic plugins built with the [Plugin SDK](https://github.com/escalated-dev/escalated-plugin-sdk). Plugins are written once in TypeScript and work across all Escalated backends.
+
+### Installing Plugins
+
+The plugin bridge is built into `escalated-laravel` — no additional PHP package required. Install plugins and the runtime via npm:
+
+```bash
+npm install @escalated-dev/plugin-runtime
+npm install @escalated-dev/plugin-slack
+npm install @escalated-dev/plugin-jira
+```
+
+### Enabling SDK Plugins
+
+```php
+// config/escalated.php
+'plugins' => [
+    'enabled'     => true,
+    'sdk_enabled' => true,  // Enable the Node.js bridge
+],
+```
+
+### How It Works
+
+SDK plugins run as a Node.js subprocess managed by `@escalated-dev/plugin-runtime`, communicating with Laravel over JSON-RPC 2.0 via stdio. The `escalated_do_action()` and `escalated_apply_filters()` helpers dual-dispatch to both legacy PHP plugins and new SDK plugins simultaneously — no changes to existing hook call sites.
+
+### Building Your Own Plugin
+
+```typescript
+import { definePlugin } from '@escalated-dev/plugin-sdk'
+
+export default definePlugin({
+  name: 'my-plugin',
+  version: '1.0.0',
+  actions: {
+    'ticket.created': async (event, ctx) => {
+      ctx.log.info('New ticket!', event)
+    },
+  },
+})
+```
+
+### Resources
+
+- [Plugin SDK](https://github.com/escalated-dev/escalated-plugin-sdk) — TypeScript SDK for building plugins
+- [Plugin Runtime](https://github.com/escalated-dev/escalated-plugin-runtime) — Runtime host for plugins
+- [Plugin Development Guide](https://github.com/escalated-dev/escalated-docs) — Full documentation
+
+See the detailed [Plugin Bridge](#plugin-bridge-sdk-plugins) section below for the full architecture, auto-generated routes, dual dispatch, and store documentation.
+
 ## Plugin Bridge (SDK Plugins)
 
 Escalated supports a second generation of plugins written in TypeScript using the `@escalated-dev/plugin-sdk`. These plugins run as a Node.js subprocess managed by `@escalated-dev/plugin-runtime` and communicate with Laravel over JSON-RPC 2.0 via stdio.
