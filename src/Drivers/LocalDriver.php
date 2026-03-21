@@ -206,6 +206,34 @@ class LocalDriver implements TicketDriver
             $query->whereHas('tags', fn ($q) => $q->whereIn('id', $filters['tag_ids']));
         }
 
+        if (! empty($filters['tag'])) {
+            $query->whereHas('tags', fn ($q) => $q->where('name', 'like', "%{$filters['tag']}%"));
+        }
+
+        if (! empty($filters['created_after'])) {
+            $query->where('created_at', '>=', $filters['created_after']);
+        }
+
+        if (! empty($filters['created_before'])) {
+            $query->where('created_at', '<=', $filters['created_before']);
+        }
+
+        if (isset($filters['has_attachments']) && $filters['has_attachments']) {
+            $query->whereHas('attachments');
+        }
+
+        if (! empty($filters['requester'])) {
+            $term = $filters['requester'];
+            $query->where(function ($q) use ($term) {
+                $q->where('guest_name', 'like', "%{$term}%")
+                  ->orWhere('guest_email', 'like', "%{$term}%")
+                  ->orWhereHas('requester', function ($rq) use ($term) {
+                      $rq->where('name', 'like', "%{$term}%")
+                        ->orWhere('email', 'like', "%{$term}%");
+                  });
+            });
+        }
+
         if (isset($filters['following']) && $filters['following'] && $for) {
             $query->whereHas('followers', fn ($q) => $q->where('user_id', $for->getKey()));
         }
