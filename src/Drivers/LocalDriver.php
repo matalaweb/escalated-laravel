@@ -27,7 +27,6 @@ class LocalDriver implements TicketDriver
     public function createTicket(Ticketable $requester, array $data): Ticket
     {
         $ticket = Ticket::create([
-            'reference' => 'TEMP-'.Str::uuid()->toString(),
             'requester_type' => $requester->getMorphClass(),
             'requester_id' => $requester->getKey(),
             'subject' => $data['subject'],
@@ -39,9 +38,6 @@ class LocalDriver implements TicketDriver
             'department_id' => $data['department_id'] ?? null,
             'metadata' => $data['metadata'] ?? null,
         ]);
-
-        $ticket->reference = $ticket->generateReference();
-        $ticket->saveQuietly();
 
         if (! empty($data['attachments'])) {
             $this->attachmentService->storeMany($ticket, $data['attachments']);
