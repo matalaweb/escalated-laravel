@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Ticket extends Model
 {
@@ -34,6 +35,31 @@ class Ticket extends Model
     protected static function boot(): void
     {
         parent::boot();
+
+        static::creating(function (self $ticket) {
+            // Set the ticket reference if not explicitly set upon creation.
+            // We use a temporary UUID to prevent collision with existing references in case of high concurrency,
+            // and then update it to the final format after creation.
+            if(empty($ticket->reference)){
+                $ticket->reference = 'TEMP-'.Str::uuid()->toString();
+            }
+
+            // Set the status to open if not explicitly set upon creation.
+            if(empty($ticket->status)){
+                $ticket->status = TicketStatus::Open;
+            }
+        });
+
+
+        static::created(function (self $ticket) {
+            // Update the reference to use the prefixed primary key if TEMP via UUID is used.
+            if(Str::startsWith($ticket->reference, 'TEMP-')){
+                $ticket->updateQuietly([
+                    'reference' => $ticket->generateReference(),
+                ]);
+            }
+        });
+
     }
 
     public function getRouteKeyName(): string

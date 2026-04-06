@@ -5,9 +5,12 @@ namespace Escalated\Laravel\Contracts;
 use Escalated\Laravel\Escalated;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Notifications\Notifiable;
 
 trait HasTickets
 {
+    use Notifiable;
+
     public function escalatedTickets(): MorphMany
     {
         return $this->morphMany(\Escalated\Laravel\Models\Ticket::class, 'requester');
