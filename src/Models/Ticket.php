@@ -36,17 +36,23 @@ class Ticket extends Model
     {
         parent::boot();
 
-        // Create a temporary reference from UUID if not
-        // already set in the model creation.
-        // UUID to prevent race condition mentioned in PR #24
         static::creating(function (self $ticket) {
+            // Set the ticket reference if not explicitly set upon creation.
+            // We use a temporary UUID to prevent collision with existing references in case of high concurrency,
+            // and then update it to the final format after creation.
             if(empty($ticket->reference)){
                 $ticket->reference = 'TEMP-'.Str::uuid()->toString();
             }
+
+            // Set the status to open if not explicitly set upon creation.
+            if(empty($ticket->status)){
+                $ticket->status = TicketStatus::Open;
+            }
         });
 
-        // Update the reference to use the prefixed primary key if TEMP via UUID is used.
+
         static::created(function (self $ticket) {
+            // Update the reference to use the prefixed primary key if TEMP via UUID is used.
             if(Str::startsWith($ticket->reference, 'TEMP-')){
                 $ticket->updateQuietly([
                     'reference' => $ticket->generateReference(),
