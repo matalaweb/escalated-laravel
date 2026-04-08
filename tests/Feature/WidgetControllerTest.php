@@ -117,7 +117,7 @@ it('ticket lookup by reference and email works', function () {
     ]);
 
     $response = $this->getJson(
-        route('escalated.widget.tickets.status', $ticket->reference) . '?email=guest@example.com'
+        route('escalated.widget.tickets.status', $ticket->reference).'?email=guest@example.com'
     );
 
     $response->assertOk();
@@ -136,7 +136,7 @@ it('ticket lookup returns 404 for wrong email', function () {
     ]);
 
     $response = $this->getJson(
-        route('escalated.widget.tickets.status', $ticket->reference) . '?email=wrong@example.com'
+        route('escalated.widget.tickets.status', $ticket->reference).'?email=wrong@example.com'
     );
 
     $response->assertNotFound();
