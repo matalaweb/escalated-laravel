@@ -39,8 +39,9 @@ class NewTicketNotification extends Notification implements ShouldQueue
             ])
             ->withSymfonyMessage(function ($message) use ($ticket) {
                 $domain = parse_url(config('app.url'), PHP_URL_HOST) ?: 'escalated.dev';
-                $messageId = '<ticket-'.$ticket->id.'@'.$domain.'>';
-                $message->getHeaders()->addTextHeader('Message-ID', $messageId);
+                $threadId = 'ticket-'.$ticket->id.'@'.$domain;
+                $message->getHeaders()->remove('Message-ID');
+                $message->getHeaders()->addIdHeader('Message-ID', $threadId);
             });
     }
 

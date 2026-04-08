@@ -11,6 +11,7 @@ use Escalated\Laravel\Notifications\TicketEscalatedNotification;
 use Escalated\Laravel\Notifications\TicketReplyNotification;
 use Escalated\Laravel\Notifications\TicketResolvedNotification;
 use Escalated\Laravel\Notifications\TicketStatusChangedNotification;
+use Symfony\Component\Mime\Email;
 
 it('NewTicketNotification registers a withSymfonyMessage callback for Message-ID', function () {
     $ticket = Ticket::factory()->create(['reference' => 'ETEST-00001']);
@@ -26,7 +27,7 @@ it('NewTicketNotification registers a withSymfonyMessage callback for Message-ID
     // that the notification has a callback (the actual header attachment
     // happens at mail-send time by the framework)
     $domain = parse_url(config('app.url'), PHP_URL_HOST) ?: 'escalated.dev';
-    $expectedId = '<ticket-' . $ticket->id . '@' . $domain . '>';
+    $expectedId = '<ticket-'.$ticket->id.'@'.$domain.'>';
 
     // We verify using reflection that the callback closure uses the ticket
     $callbackCount = count($mail->callbacks);
@@ -51,10 +52,10 @@ it('TicketReplyNotification sets In-Reply-To and References headers', function (
     expect($mail->callbacks)->not->toBeEmpty();
 
     $domain = parse_url(config('app.url'), PHP_URL_HOST) ?: 'escalated.dev';
-    $expectedId = '<ticket-' . $ticket->id . '@' . $domain . '>';
+    $expectedId = '<ticket-'.$ticket->id.'@'.$domain.'>';
 
     // In-Reply-To and References are text headers, safe to test with addTextHeader
-    $symfonyMessage = new \Symfony\Component\Mime\Email();
+    $symfonyMessage = new Email;
     // Remove default Message-ID to avoid conflict, then run callbacks
     foreach ($mail->callbacks as $callback) {
         $callback($symfonyMessage);
@@ -93,7 +94,7 @@ it('all 7 notifications use markdown templates', function () {
     foreach ($notifications as $notification) {
         $mail = $notification->toMail($user);
         expect($mail->markdown)->not->toBeNull(
-            get_class($notification) . ' should use a markdown template'
+            get_class($notification).' should use a markdown template'
         );
     }
 });

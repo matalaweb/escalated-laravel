@@ -45,9 +45,9 @@ class SlaBreachNotification extends Notification implements ShouldQueue
             ])
             ->withSymfonyMessage(function ($message) use ($ticket) {
                 $domain = parse_url(config('app.url'), PHP_URL_HOST) ?: 'escalated.dev';
-                $messageId = '<ticket-'.$ticket->id.'@'.$domain.'>';
-                $message->getHeaders()->addTextHeader('In-Reply-To', $messageId);
-                $message->getHeaders()->addTextHeader('References', $messageId);
+                $threadId = 'ticket-'.$ticket->id.'@'.$domain;
+                $message->getHeaders()->addIdHeader('In-Reply-To', $threadId);
+                $message->getHeaders()->addIdHeader('References', $threadId);
             });
     }
 
