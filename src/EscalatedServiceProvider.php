@@ -152,6 +152,9 @@ class EscalatedServiceProvider extends ServiceProvider
         if (config('escalated.inbound_email.enabled', false)) {
             $this->loadRoutesFrom(__DIR__.'/../routes/inbound.php');
         }
+
+        // Widget routes (public, rate-limited)
+        $this->loadRoutesFrom(__DIR__.'/../routes/widget.php');
     }
 
     /**
