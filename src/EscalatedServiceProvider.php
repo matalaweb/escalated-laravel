@@ -145,6 +145,11 @@ class EscalatedServiceProvider extends ServiceProvider
         // Inbound email webhook routes (no auth required)
         if (config('escalated.inbound_email.enabled', false)) {
             $this->loadRoutesFrom(__DIR__.'/../routes/inbound.php');
+        }
+
+        // Broadcasting channel authorization routes
+        if (config('escalated.broadcasting.enabled', false)) {
+            require __DIR__.'/../routes/channels.php';
         }
 
         // Widget routes (public, rate-limited)
