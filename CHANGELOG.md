@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-18
+
+### Security
+- Block SSRF in `WorkflowEngine::actionSendWebhook()` by validating URL scheme and rejecting URLs that resolve to private/reserved IPs (#49)
+- Prevent regex injection (ReDoS) in `compareValues()` `matches` operator via `safeRegexMatch()` with pattern validation and a PCRE backtrack limit (#49)
+- Enforce strict `in:` validation for `actions.*.type` in `WorkflowController` store/update to prevent arbitrary action type injection (#49)
+- Whitelist allowed fields (`subject`, `description`, `ticket_type`, `channel`) in `resolveFieldValue()` default case instead of open `$ticket->{$field}` (#49)
+- Apply granular rate limiting: ticket creation `5/min`, chat start `5/min`, chat message `30/min` (#49)
+- Add `AuditLog` entries for workflow create/update/delete and report exports (#49)
+
+### Fixed
+- Register `Escalated\Laravel\Database\Seeders` namespace in production autoload so `php artisan escalated:install` can run the permission seeder when the package is installed as a dependency (#56)
+- Include `url` in attachment serialization (#50)
+- Include computed ticket fields in serialization (#51)
+- Include chat, context panel, and activity fields in ticket serialization (#52)
+- Move expensive computed fields from `$appends` to detail-only serialization to keep list endpoints fast (#53)
+- Add missing workflow and workflow log computed fields (#54)
+
+### Internal
+- CI: switch `minimum-stability` to `stable` and add `audit.ignore` for two phpunit advisories that were blocking the resolver from selecting any compatible phpunit version (#57)
+
+## [1.1.0] - 2026-04-06
+
 ### Fixed
 - Dispatch TicketCreated event after reference generation, restore priority cast
 - Set ticket status if not present
