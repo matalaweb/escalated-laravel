@@ -268,15 +268,15 @@ class ReportController extends Controller
     {
         $driver = DB::connection()->getDriverName();
 
-        if ($driver === 'sqlite') {
-            $raw = 'AVG((julianday(first_response_at) - julianday(created_at)) * 24) as avg_hours';
-        } else {
-            $raw = 'AVG(TIMESTAMPDIFF(HOUR, created_at, first_response_at)) as avg_hours';
-        }
+        $expr = match ($driver) {
+            'sqlite' => '(julianday(first_response_at) - julianday(created_at)) * 24',
+            'pgsql' => 'EXTRACT(EPOCH FROM (first_response_at - created_at)) / 3600',
+            default => 'TIMESTAMPDIFF(HOUR, created_at, first_response_at)',
+        };
 
         return (float) (Ticket::whereNotNull('first_response_at')
             ->where('created_at', '>=', $since)
-            ->selectRaw($raw)
+            ->selectRaw("AVG({$expr}) as avg_hours")
             ->value('avg_hours') ?? 0);
     }
 

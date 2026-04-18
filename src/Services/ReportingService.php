@@ -1042,28 +1042,41 @@ class ReportingService
     // Private Helpers
     // ──────────────────────────────────────────────────────────────────────
 
+    protected function driver(): string
+    {
+        return DB::connection()->getDriverName();
+    }
+
     protected function isSqlite(): bool
     {
-        return DB::connection()->getDriverName() === 'sqlite';
+        return $this->driver() === 'sqlite';
     }
 
     protected function dateExpression(string $column): string
     {
-        return $this->isSqlite() ? "date({$column})" : "DATE({$column})";
+        return match ($this->driver()) {
+            'sqlite' => "date({$column})",
+            'pgsql' => "{$column}::date",
+            default => "DATE({$column})",
+        };
     }
 
     protected function groupByDateExpression(string $column, ?string $groupBy): string
     {
         if ($groupBy === 'week') {
-            return $this->isSqlite()
-                ? "strftime('%Y-W%W', {$column})"
-                : "DATE_FORMAT({$column}, '%Y-W%v')";
+            return match ($this->driver()) {
+                'sqlite' => "strftime('%Y-W%W', {$column})",
+                'pgsql' => "to_char({$column}, 'IYYY-\"W\"IW')",
+                default => "DATE_FORMAT({$column}, '%Y-W%v')",
+            };
         }
 
         if ($groupBy === 'month') {
-            return $this->isSqlite()
-                ? "strftime('%Y-%m', {$column})"
-                : "DATE_FORMAT({$column}, '%Y-%m')";
+            return match ($this->driver()) {
+                'sqlite' => "strftime('%Y-%m', {$column})",
+                'pgsql' => "to_char({$column}, 'YYYY-MM')",
+                default => "DATE_FORMAT({$column}, '%Y-%m')",
+            };
         }
 
         return $this->dateExpression($column);
@@ -1071,23 +1084,21 @@ class ReportingService
 
     protected function hoursDiffExpression(string $from, string $to): string
     {
-        return $this->isSqlite()
-            ? "(julianday({$to}) - julianday({$from})) * 24"
-            : "TIMESTAMPDIFF(HOUR, {$from}, {$to})";
+        return match ($this->driver()) {
+            'sqlite' => "(julianday({$to}) - julianday({$from})) * 24",
+            'pgsql' => "EXTRACT(EPOCH FROM ({$to} - {$from})) / 3600",
+            default => "TIMESTAMPDIFF(HOUR, {$from}, {$to})",
+        };
     }
 
     protected function avgHoursDiffExpression(string $from, string $to): string
     {
-        return $this->isSqlite()
-            ? "AVG((julianday({$to}) - julianday({$from})) * 24)"
-            : "AVG(TIMESTAMPDIFF(HOUR, {$from}, {$to}))";
+        return 'AVG('.$this->hoursDiffExpression($from, $to).')';
     }
 
     protected function avgHoursDiffRaw(string $from, string $to): string
     {
-        return $this->isSqlite()
-            ? "AVG((julianday({$to}) - julianday({$from})) * 24)"
-            : "AVG(TIMESTAMPDIFF(HOUR, {$from}, {$to}))";
+        return $this->avgHoursDiffExpression($from, $to);
     }
 
     /**
