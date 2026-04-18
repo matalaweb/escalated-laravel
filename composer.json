@@ -18,7 +18,8 @@
     "autoload": {
         "psr-4": {
             "Escalated\\Laravel\\": "src/",
-            "Escalated\\Laravel\\Database\\Seeders\\": "database/seeders/"
+            "Escalated\\Laravel\\Database\\Seeders\\": "database/seeders/",
+            "Escalated\\Laravel\\Database\\Factories\\": "database/factories/"
         },
         "files": [
             "src/Support/helpers.php"
@@ -26,8 +27,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Escalated\\Laravel\\Tests\\": "tests/",
-            "Escalated\\Laravel\\Database\\Factories\\": "database/factories/"
+            "Escalated\\Laravel\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -50,5 +50,14 @@
         }
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "archive": {
+        "exclude": [
+            "/docker",
+            "/.dockerignore",
+            "/docs",
+            "/tests",
+            "/.github"
+        ]
+    }
 }
