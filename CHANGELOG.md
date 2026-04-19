@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-18
+
+### Fixed
+- Emit Postgres-compatible SQL from `ReportingService` and `ReportController::avgFirstResponseHours`. Previous `TIMESTAMPDIFF(HOUR, ...)` and `DATE_FORMAT(...)` calls (MySQL-only) caused `/support/admin/reports` to 500 on Postgres deployments with `column "hour" does not exist`. Date/time and date-format helpers now branch on driver across `sqlite | pgsql | mysql`. (#60, fixes #59)
+
+### Internal
+- Added Docker dev/demo environment under `docker/` (excluded from the Composer dist via `archive.exclude`). `docker compose up --build` boots a Postgres-backed Laravel host with the package installed and a click-to-login picker. (#58)
+- Production PSR-4 autoload now includes `Escalated\Laravel\Database\Factories\` so `Model::factory()` resolves at runtime in real installs. Same class of bug as #55. (#58)
+
 ## [1.2.0] - 2026-04-18
 
 ### Security
